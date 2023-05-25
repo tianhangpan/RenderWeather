@@ -4,6 +4,7 @@ from PIL import Image
 import os
 import time
 from pathlib import Path
+import cv2
 
 
 class DepthEstimator:
@@ -14,8 +15,8 @@ class DepthEstimator:
         self.device = torch.device('cuda')
 
         repo = "isl-org/ZoeDepth"
-        self.model = torch.hub.load(repo, "ZoeD_NK", pretrained=True)
-        self.model = self.model.to(self.device)
+        self.model_cpu = torch.hub.load(repo, "ZoeD_NK", pretrained=True)
+        self.model_gpu = self.model_cpu.to(self.device)
 
         self.dataset_dir = Path(r'E:\python_data\datasets\nwpu')
         self.stage_dirs = [(self.dataset_dir / stage) for stage in ['train', 'val', 'test']]
@@ -45,11 +46,38 @@ class DepthEstimator:
     def process(self):
         for i, d in enumerate(self.img_dirs):
             image = Image.open(d)
-            depth = self.model.infer_pil(image, output_type="tensor")
+            try:
+                depth = self.model_gpu.infer_pil(image, output_type="tensor")
+            except:
+                depth = self.model_cpu.infer_pil(image, output_type="tensor")
             depth = np.array(depth)
+            depth = self.guided_filter(depth, depth, 32)
             np.save(str(d).replace('images', 'depth').replace('.jpg', '.npy'), depth)
             # depth.save(str(d).replace('images', 'depth'))
             print(f'[{i} / {len(self.img_dirs)}] done. ')
+
+    @staticmethod
+    def guided_filter(img, p, win_size):
+        # borrowed from https://blog.csdn.net/wsp_1138886114/article/details/84228939
+        eps = 0.01
+
+        mean_i = cv2.blur(img, win_size)  # I的均值平滑
+        mean_p = cv2.blur(p, win_size)  # p的均值平滑
+
+        mean_ii = cv2.blur(img * img, win_size)  # I*I的均值平滑
+        mean_ip = cv2.blur(img * p, win_size)  # I*p的均值平滑
+
+        var_i = mean_ii - mean_i * mean_i  # 方差
+        cov_ip = mean_ip - mean_i * mean_p  # 协方差
+
+        a = cov_ip / (var_i + eps)  # 相关因子a
+        b = mean_p - a * mean_i  # 相关因子b
+
+        mean_a = cv2.blur(a, win_size)  # 对a进行均值平滑
+        mean_b = cv2.blur(b, win_size)  # 对b进行均值平滑
+
+        q = mean_a * img + mean_b
+        return q
 
 
 if __name__ == '__main__':

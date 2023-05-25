@@ -44,4 +44,3 @@ class Collator:
 if __name__ == '__main__':
     collator = Collator()
     collator.process()
-
