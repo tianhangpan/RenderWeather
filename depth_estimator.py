@@ -32,10 +32,10 @@ class DepthEstimator:
         for e in self.stage_dirs:
             depth_dir = e / 'depth'
             depth_dir.mkdir(exist_ok=True)
-            stage_depth_dirs = list(depth_dir.glob('*.jpg'))
+            stage_depth_dirs = list(depth_dir.glob('*.npz'))
             for i in range(len(stage_depth_dirs)):
                 tmp = stage_depth_dirs[i]
-                tmp = Path(str(tmp).replace('depth', 'images'))
+                tmp = Path(str(tmp).replace('depth', 'images').replace('npz', 'jpg'))
                 stage_depth_dirs[i] = tmp
             self.processed |= set(stage_depth_dirs)
 
@@ -52,8 +52,7 @@ class DepthEstimator:
                 depth = self.model_cpu.infer_pil(image, output_type="tensor")
             depth = np.array(depth)
             depth = self.guided_filter(depth, depth, 32)
-            np.save(str(d).replace('images', 'depth').replace('.jpg', '.npy'), depth)
-            # depth.save(str(d).replace('images', 'depth'))
+            np.savez_compressed(str(d).replace('images', 'depth').replace('.jpg', '.npz'), depth=depth)
             print(f'[{i} / {len(self.img_dirs)}] done. ')
 
     @staticmethod
