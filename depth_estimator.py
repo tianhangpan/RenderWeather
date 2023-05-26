@@ -51,7 +51,7 @@ class DepthEstimator:
             except:
                 depth = self.model_cpu.infer_pil(image, output_type="tensor")
             depth = np.array(depth)
-            depth = self.guided_filter(depth, depth, 32)
+            depth = self.guided_filter(depth, depth, (32, 32))
             np.savez_compressed(str(d).replace('images', 'depth').replace('.jpg', '.npz'), depth=depth)
             print(f'[{i} / {len(self.img_dirs)}] done. ')
 
