@@ -13,6 +13,10 @@ class WeatherRenderer:
     @staticmethod
     def render_haze(img, depth):
         # img, depth: numpy ndarray format
+        # depth = 1. / (depth + .1)
+        print(np.max(depth))
+        depth /= np.max(depth)
+
         h, w = img.shape[: 2]
 
         # transmittance
@@ -32,16 +36,22 @@ class WeatherRenderer:
 
     @staticmethod
     def render_rain(img, theta, density, intensity):
-        # img: numpy ndarray format
+        # img: numpy ndarray format, 0 ~ 1
         h, w = img.shape[: 2]
 
         img = np.power(img, 2)
 
+        if theta == 'random':
+            while True:
+                theta = 90 + np.random.normal(scale=0.25) * 90
+                if 0 <= theta <= 180:
+                    break
+
         # parameter seed gen
         s = 1.01 + random.random() * 0.2
         m = density * (0.2 + random.random() * 0.05)  # mean of gaussian, controls density of rain
-        v = intensity + random.random() * 0.3  # variance of gaussian,  controls intensity of rain streak
-        length = random.randint(1, 40) + 20  # len of motion blur, control size of rain streak
+        v = intensity + random.random() * 0.1  # variance of gaussian, controls intensity of rain streak
+        length = random.randint(40, 45) + 20  # len of motion blur, control size of rain streak
 
         # Generate proper noise seed
         dense_chnl = np.zeros([h, w, 1])
@@ -52,7 +62,7 @@ class WeatherRenderer:
         dense_chnl_noise = dense_chnl_noise[pos_h: pos_h + h, pos_w: pos_w + w]
 
         # form filter
-        m = cv2.getRotationMatrix2D((length / 2, length / 2), theta - 45, 1)
+        m = cv2.getRotationMatrix2D((length / 2, length / 2), theta + 45, 1)
         motion_blur_kernel = np.diag(np.ones(length))
         motion_blur_kernel = cv2.warpAffine(motion_blur_kernel, m, (length, length))
         motion_blur_kernel = motion_blur_kernel / length
@@ -76,8 +86,10 @@ class WeatherRenderer:
 
 
 if __name__ == '__main__':
-    img = WeatherRenderer.get_float_ndimage(r'/Users/pantianhang/python_data/datasets/nwpu/train/images/3106.jpg')
-    img_rain, _ = WeatherRenderer.render_rain(img, 90, 0.15, 1.0)
+    img = WeatherRenderer.get_float_ndimage(r'/Users/pantianhang/python_data/datasets/nwpu/train/images/0004.jpg')
+    depth = np.load(r'/Users/pantianhang/python_data/datasets/nwpu/train/depth/0004.npz')['depth']
+    img_haze, _, _ = WeatherRenderer.render_haze(img, depth)
+    # Image.fromarray(img_haze).save('./sample.jpg')
 
-    plt.imshow(img_rain)
+    plt.imshow(img_haze)
     plt.show()
