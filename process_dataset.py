@@ -8,9 +8,7 @@ from scipy.ndimage.filters import gaussian_filter
 from scipy.spatial import KDTree
 import scipy
 import shutil
-import h5py
 from PIL import Image
-import cv2
 import random
 
 from weather_renderer import WeatherRenderer
@@ -21,7 +19,7 @@ class DatasetProcessor:
         self.num_workers = multiprocessing.cpu_count()
         args = self.parse_args()
         self.dataset_dir = Path(args.dataset_dir)
-        assert args.task in ['weather', 'gt_density']
+        assert args.task in ['weather', 'density_map']
         self.task = args.task
         stages = ['train', 'val', 'test']
         self.img_dirs = set({})
@@ -112,7 +110,7 @@ class DatasetProcessor:
 
         gt_density_map = DatasetProcessor.gaussian_filter_density(img, points)
         gt_save_path = Path(str(img_dir).replace('images', 'gt_density_maps').replace('.jpg', '.npz'))
-        np.save(gt_save_path, gt_density_map=gt_density_map)
+        np.savez_compressed(gt_save_path, gt_density_map=gt_density_map)
 
     @staticmethod
     def gaussian_filter_density(img, points):
@@ -167,6 +165,11 @@ class DatasetProcessor:
         # parser.add_argument('task', type=str, help='target data path')
 
         args = parser.parse_args()
-        args.dataset_dir = r'/Users/pantianhang/python_data/datasets/nwpu'
-        args.task = 'weather'
+        args.dataset_dir = r'E:\python_data\datasets\nwpu'
+        args.task = 'density_map'
         return args
+
+
+if __name__ == '__main__':
+    dataset_processor = DatasetProcessor()
+    dataset_processor.start()

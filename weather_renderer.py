@@ -14,7 +14,6 @@ class WeatherRenderer:
     def render_haze(img, depth):
         # img, depth: numpy ndarray format
         # depth = 1. / (depth + .1)
-        print(np.max(depth))
         depth /= np.max(depth)
 
         h, w = img.shape[: 2]
