@@ -106,7 +106,7 @@ class DatasetProcessor:
         img = np.array(Image.open(img_dir))
         with Path(str(img_dir).replace('images', 'jsons').replace('.jpg', '.json')).open('r') as jsf:
             state_dict = json.load(jsf)
-            points = state_dict['points']
+            points = np.array(state_dict['points'])
 
         gt_density_map = DatasetProcessor.gaussian_filter_density(img, points)
         gt_save_path = Path(str(img_dir).replace('images', 'gt_density_maps').replace('.jpg', '.npz'))
