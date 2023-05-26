@@ -12,11 +12,12 @@ class DepthEstimator:
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         torch.cuda.manual_seed(int(time.time()))
         torch.multiprocessing.set_sharing_strategy('file_system')
-        self.device = torch.device('cuda')
 
         repo = "isl-org/ZoeDepth"
+        self.model_gpu = torch.hub.load(repo, "ZoeD_NK", pretrained=True)
+        self.model_gpu = self.model_gpu.to(torch.device('cuda'))
         self.model_cpu = torch.hub.load(repo, "ZoeD_NK", pretrained=True)
-        self.model_gpu = self.model_cpu.to(self.device)
+        self.model_cpu = self.model_cpu.to(torch.device('cpu'))
 
         self.dataset_dir = Path(r'E:\python_data\datasets\nwpu')
         self.stage_dirs = [(self.dataset_dir / stage) for stage in ['train', 'val', 'test']]
