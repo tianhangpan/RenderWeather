@@ -27,7 +27,7 @@ class DatasetProcessor:
             stage_img_dirs = set((self.dataset_dir / stage / 'images').glob('*.jpg'))
             self.img_dirs |= stage_img_dirs
 
-        if args.resume:
+        if args.resume and self.task == 'density_map':
             self.processed = set({})
             for stage in stages:
                 processed_dir = self.dataset_dir / stage / 'gt_density_maps'
@@ -110,6 +110,7 @@ class DatasetProcessor:
         json_path = Path(str(img_path).replace('images', 'jsons').replace('.jpg', '.json'))
         with json_path.open('r') as jsf:
             state_dict = json.load(jsf)
+        state_dict['weather'] = weather
         weather_json_path = Path(str(json_path).replace('jsons', 'weather_jsons'))
         with weather_json_path.open('w') as jsf:
             dict_s = json.dumps(state_dict)
@@ -180,7 +181,7 @@ class DatasetProcessor:
 
         args = parser.parse_args()
         args.dataset_dir = r'E:\python_data\datasets\nwpu'
-        args.task = 'density_map'
+        args.task = 'weather'
         args.resume = True
         return args
 
