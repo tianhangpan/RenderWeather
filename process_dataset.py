@@ -26,6 +26,19 @@ class DatasetProcessor:
         for stage in stages:
             stage_img_dirs = set((self.dataset_dir / stage / 'images').glob('*.jpg'))
             self.img_dirs |= stage_img_dirs
+
+        if args.resume:
+            self.processed = set({})
+            for stage in stages:
+                processed_dir = self.dataset_dir / stage / 'weather_images'
+                stage_processed_dirs = list(processed_dir.glob('*.jpg'))
+                for i in range(len(stage_processed_dirs)):
+                    tmp = stage_processed_dirs[i]
+                    tmp = Path(str(tmp).replace('weather_images', 'images'))
+                    stage_processed_dirs[i] = tmp
+                self.processed |= set(stage_processed_dirs)
+            self.img_dirs -= self.processed
+
         self.img_dirs = list(self.img_dirs)
 
         if args.task == 'weather':
@@ -44,6 +57,7 @@ class DatasetProcessor:
         self.done_number = 0
         self.lock = threading.RLock()
         print(f'count of threads: {self.num_workers}')
+        print(f'number of tasks: {len(self.img_dirs)}')
 
     def start(self):
         for thread in self.threads:
@@ -167,9 +181,10 @@ class DatasetProcessor:
         args = parser.parse_args()
         args.dataset_dir = r'E:\python_data\datasets\nwpu'
         args.task = 'density_map'
+        args.resume = True
         return args
 
 
 if __name__ == '__main__':
     dataset_processor = DatasetProcessor()
-    dataset_processor.start()
+    # dataset_processor.start()
