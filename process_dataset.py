@@ -97,13 +97,13 @@ class DatasetProcessor:
         if weather == 0:
             shutil.copy(img_path, img_target_path)
         elif weather == 1:
-            img = np.array(Image.open(img_path))
+            img = WeatherRenderer.get_float_ndimage(img_path)
             depth_path = str(img_path).replace('images', 'depth').replace('.jpg', '.npz')
             depth = np.load(depth_path)['depth']
             img_haze, _, _ = WeatherRenderer.render_haze(img, depth)
-            Image.fromarray((img_haze * 255).astype(np.uint8)).save(img_target_path, quality=95)
+            Image.fromarray((img_haze * 255).astype(np.uint8)).convert('RGB').save(img_target_path, quality=95)
         else:
-            img = np.array(Image.open(img_path))
+            img = WeatherRenderer.get_float_ndimage(img_path)
             img_rain, _ = WeatherRenderer.render_rain(img, 'random', 0.15, 1.2)
             Image.fromarray((img_rain * 255).astype(np.uint8)).save(img_target_path, quality=95)
 
