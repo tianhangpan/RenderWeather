@@ -30,11 +30,11 @@ class DatasetProcessor:
         if args.resume:
             self.processed = set({})
             for stage in stages:
-                processed_dir = self.dataset_dir / stage / 'weather_images'
-                stage_processed_dirs = list(processed_dir.glob('*.jpg'))
+                processed_dir = self.dataset_dir / stage / 'gt_density_maps'
+                stage_processed_dirs = list(processed_dir.glob('*.npz'))
                 for i in range(len(stage_processed_dirs)):
                     tmp = stage_processed_dirs[i]
-                    tmp = Path(str(tmp).replace('weather_images', 'images'))
+                    tmp = Path(str(tmp).replace('gt_density_maps', 'images').replace('.npz', '.jpg'))
                     stage_processed_dirs[i] = tmp
                 self.processed |= set(stage_processed_dirs)
             self.img_dirs -= self.processed
@@ -187,4 +187,4 @@ class DatasetProcessor:
 
 if __name__ == '__main__':
     dataset_processor = DatasetProcessor()
-    # dataset_processor.start()
+    dataset_processor.start()
