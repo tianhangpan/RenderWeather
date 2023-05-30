@@ -124,6 +124,55 @@ class UCFCollator(BaseCollator):
             print(f'[{i + 1} / {len(self.img_dirs)}] done. ')
 
 
+class Integrator:
+    def __init__(self):
+        self.dataset_path_dict = {'nwpu': Path(r''),
+                                  'ucf_qnrf': Path(r'')}
+
+        self.target_path = Path(r'')
+        self.stages = ['train', 'val', 'test']
+        self.file_types = ['density_maps', 'images', 'jsons']
+        for stage in self.stages:
+            for file_type in self.file_types:
+                (self.target_path / stage / file_type).mkdir(exist_ok=True)
+
+    def process(self):
+        def name_num_map(dataset, num):
+            assert dataset in ['nwpu', 'ucf']
+            if dataset == 'nwpu':
+                if 3110 <= num <= 3609:
+                    num += 367
+                elif 2610 <= num <= 3109:
+                    num += 1701
+            elif dataset == 'ucf':
+                if 1 <= num <= 867:
+                    num += 2609
+                elif 868 <= num <= 1201:
+                    num += 3089
+                elif 1202 <= num <= 1535:
+                    num += 3609
+            return num
+
+        for dataset in ['nwpu', 'ucf_qnrf']:
+            for stage in self.stages:
+                for file_type in self.file_types:
+                    file_paths = list((self.dataset_path_dict[dataset] / stage / file_type).glob('*'))
+                    for file_path in file_paths:
+                        num = int(file_path.name)
+                        tar_num = name_num_map(dataset, num)
+                        tar_name = f'{tar_num:04d}.{file_path.suffix}'
+                        if file_type == 'jsons':
+                            with file_path.open('r') as jsf:
+                                state_dict = json.load(jsf)
+                            state_dict['source'] = dataset
+                            with (self.target_path / stage / file_type / tar_name).open('w') as jsf:
+                                dict_s = json.dumps(state_dict)
+                                jsf.write(dict_s)
+                        else:
+                            shutil.copy(file_path, self.target_path / stage / file_type / tar_name)
+                        print(f'{dataset} {state_dict} {file_type} {file_path.name} done. ')
+
+
 if __name__ == '__main__':
     collator = UCFCollator()
     collator.process()
