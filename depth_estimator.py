@@ -19,7 +19,7 @@ class DepthEstimator:
         self.model_cpu = torch.hub.load(repo, "ZoeD_NK", pretrained=True)
         self.model_cpu = self.model_cpu.to(torch.device('cpu'))
 
-        self.dataset_dir = Path(r'E:\python_data\datasets\nwpu')
+        self.dataset_dir = Path(r'E:\python_data\datasets\UCF-QNRF_collated')
         self.stage_dirs = [(self.dataset_dir / stage) for stage in ['train', 'val', 'test']]
         self.img_dirs = set({})
         for e in self.stage_dirs:

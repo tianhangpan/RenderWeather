@@ -180,9 +180,9 @@ class DatasetProcessor:
         # parser.add_argument('task', type=str, help='target data path')
 
         args = parser.parse_args()
-        args.dataset_dir = r'E:\python_data\datasets\nwpu'
-        args.task = 'weather'
-        args.resume = True
+        args.dataset_dir = r'E:\python_data\datasets\UCF-QNRF_collated'
+        args.task = 'density_map'
+        args.resume = False
         return args
 
 
