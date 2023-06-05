@@ -113,10 +113,61 @@ class UCFCollator(BaseCollator):
 
             mat_dir = Path(str(img_dir).replace('.jpg', '_ann.mat'))
             mat_file = scipy.io.loadmat(str(mat_dir))
-            points = mat_file['annPoints'].tolist()
+            points = mat_file['annPoints']
+            points = (points * factor).to_list()
             human_num = len(points)
             state_dict = {'human_num': human_num, 'points': points}
             json_tar_dir = self.target_dir / stage / 'jsons' / f'{num}.json'
+            with json_tar_dir.open('w') as jsf:
+                dict_s = json.dumps(state_dict)
+                jsf.write(dict_s)
+
+            print(f'[{i + 1} / {len(self.img_dirs)}] done. ')
+
+
+class JHUCollator:
+    def __init__(self):
+        self.dataset_dir = Path(r'/Users/pantianhang/python_data/datasets/jhu_crowd_v2.0')
+        self.target_dir = Path(r'/Users/pantianhang/python_data/datasets/jhu_collated')
+        self.target_dir.mkdir(exist_ok=True)
+        self.img_dirs = set({})
+        for stage in ['train', 'val', 'test']:
+            (self.target_dir / stage).mkdir(exist_ok=True)
+            (self.target_dir / stage / 'images').mkdir(exist_ok=True)
+            (self.target_dir / stage / 'jsons').mkdir(exist_ok=True)
+            stage_img_dirs = set((self.dataset_dir / stage / 'images').glob('*.jpg'))
+            self.img_dirs |= stage_img_dirs
+        self.img_dirs = list(self.img_dirs)
+
+    def process(self):
+        weather_labels = {'train': {}, 'val': {}, 'test': {}}
+        for stage in weather_labels.keys():
+            with (self.dataset_dir / stage / 'image_labels.txt').open('r') as txtf:
+                lines = list(txtf.readlines())
+            for i in range(len(lines)):
+                lines[i] = lines[i].split(',')
+                weather_labels[stage][lines[i][0]] = int(lines[i][3])
+
+        for i, img_dir in enumerate(self.img_dirs):
+            stage = img_dir.parent.parent.name
+            img_tar_dir = self.target_dir / stage / 'images' / img_dir.name
+            img, factor = BaseCollator.resize(Image.open(img_dir))
+            img = img.convert('RGB')
+            img.save(img_tar_dir, quality=95)
+
+            state_dict = {'image_id': img_dir.name}
+            json_tar_dir = self.target_dir / stage / 'jsons' / f'{img_dir.stem}.json'
+            txt_dir = Path(str(img_dir).replace('images', 'gt').replace('.jpg', '.txt'))
+            with txt_dir.open('r') as txtf:
+                lines = list(txtf.readlines())
+            for j in range(len(lines)):
+                lines[j] = list(map(int, (lines[j].split())[:2]))
+                lines[j][0] *= factor
+                lines[j][1] *= factor
+            state_dict['points'] = lines
+            state_dict['human_num'] = len(lines)
+            state_dict['weather'] = weather_labels[stage][img_dir.stem]
+
             with json_tar_dir.open('w') as jsf:
                 dict_s = json.dumps(state_dict)
                 jsf.write(dict_s)
@@ -174,5 +225,5 @@ class Integrator:
 
 
 if __name__ == '__main__':
-    collator = UCFCollator()
+    collator = JHUCollator()
     collator.process()
