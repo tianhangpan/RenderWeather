@@ -184,7 +184,8 @@ class GCCCollator:
 
         self.scene_lists = {'train': [], 'val': [], 'test': []}
 
-        lists = {'train': Path(r'./cross_location_train_list.txt'), 'test': Path(r'./cross_location_test_list.txt')}
+        lists = {'train': self.dataset_dir / 'cross_location_train_list.txt',
+                 'test': self.dataset_dir / 'cross_location_test_list.txt'}
         for stage in ['train', 'test']:
             with lists[stage].open('r') as txtf:
                 for line in txtf:
@@ -205,13 +206,13 @@ class GCCCollator:
             for scene_number in self.scene_lists[stage]:
                 for camera_number in ['0', '1', '2', '3']:
                     sub_dir = self.dataset_dir / f'scene_{scene_number}_{camera_number}' / 'pngs'
-                    self.image_path_sets[stage] += sub_dir.glob('*.png')
+                    self.image_path_sets[stage] |= set(sub_dir.glob('*.png'))
 
             self.image_path_sets[stage] = sorted(list(self.image_path_sets[stage]))
 
-            print(len(self.image_path_sets['train']))
-            print(len(self.image_path_sets['val']))
-            print(len(self.image_path_sets['test']))
+        print(len(self.image_path_sets['train']))
+        print(len(self.image_path_sets['val']))
+        print(len(self.image_path_sets['test']))
 
     def process(self):
         pass
