@@ -210,12 +210,29 @@ class GCCCollator:
 
             self.image_path_sets[stage] = sorted(list(self.image_path_sets[stage]))
 
-        print(len(self.image_path_sets['train']))
-        print(len(self.image_path_sets['val']))
-        print(len(self.image_path_sets['test']))
-
     def process(self):
-        pass
+        weather_dict = {'CLEAR': 0, 'CLOUDS': 1, 'RAIN': 2, 'FOGGY': 3, 'THUNDER': 4, 'OVERCAST': 5,
+                        'EXTRASUNNY': 6}
+        for stage in ['train', 'val', 'test']:
+            for i, img_path in enumerate(self.image_path_sets[stage]):
+                img = Image.open(img_path)
+                img.save(self.target_dir / stage / 'images' / f'{img_path.stem}.jpg')
+
+                json_path = Path(str(img_path).replace('pngs', 'jsons').replace('.png', '.json'))
+                with json_path.open('r') as jsf:
+                    state_dict = json.load(jsf)
+                    points = state_dict['image_info']
+                    corrected_points = [[point[1], point[0]] for point in points]
+                    weather = weather_dict[state_dict['weather']]
+                    new_state_dict = {'img_id': f'{img_path.stem}.jpg', 'human_num': len(points),
+                                      'points': corrected_points, 'weather': weather}
+
+                json_tar_dir = self.target_dir / stage / 'jsons' / f'{img_path.stem}.json'
+                with json_tar_dir.open('w') as jsf:
+                    new_state_dict = json.dumps(new_state_dict)
+                    jsf.write(new_state_dict)
+
+                print(f'{stage} set: [{i + 1} / {len(self.image_path_sets[stage])}] done. \r', end='')
 
 
 class Integrator:
