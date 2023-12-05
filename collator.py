@@ -3,6 +3,7 @@ import shutil
 from PIL import Image
 import json
 import scipy
+import random
 
 
 class BaseCollator:
@@ -175,6 +176,47 @@ class JHUCollator:
             print(f'[{i + 1} / {len(self.img_dirs)}] done. ')
 
 
+class GCCCollator:
+    def __init__(self):
+        self.dataset_dir = Path(r'D:\python_data\datasets\GCC_raw')
+        self.target_dir = Path(r'D:\python_data\datasets\GCC_collated')
+        self.target_dir.mkdir(exist_ok=True)
+
+        self.scene_lists = {'train': [], 'val': [], 'test': []}
+
+        lists = {'train': Path(r'./cross_location_train_list.txt'), 'test': Path(r'./cross_location_test_list.txt')}
+        for stage in ['train', 'test']:
+            with lists[stage].open('r') as txtf:
+                for line in txtf:
+                    data = line.split()
+                    scene_number = data[3][11: 13]
+                    if scene_number not in self.scene_lists[stage]:
+                        self.scene_lists[stage].append(scene_number)
+
+        self.scene_lists['val'] = sorted(random.sample(self.scene_lists['train'], 10))
+        self.scene_lists['train'] = sorted(list(set(self.scene_lists['train']) - set(self.scene_lists['val'])))
+
+        self.image_path_sets = {'train': set({}), 'val': set({}), 'test': set({})}
+        for stage in ['train', 'val', 'test']:
+            (self.target_dir / stage).mkdir(exist_ok=True)
+            (self.target_dir / stage / 'images').mkdir(exist_ok=True)
+            (self.target_dir / stage / 'jsons').mkdir(exist_ok=True)
+
+            for scene_number in self.scene_lists[stage]:
+                for camera_number in ['0', '1', '2', '3']:
+                    sub_dir = self.dataset_dir / f'scene_{scene_number}_{camera_number}' / 'pngs'
+                    self.image_path_sets[stage] += sub_dir.glob('*.png')
+
+            self.image_path_sets[stage] = sorted(list(self.image_path_sets[stage]))
+
+            print(len(self.image_path_sets['train']))
+            print(len(self.image_path_sets['val']))
+            print(len(self.image_path_sets['test']))
+
+    def process(self):
+        pass
+
+
 class Integrator:
     def __init__(self):
         self.dataset_path_dict = {'nwpu': Path(r''),
@@ -225,5 +267,5 @@ class Integrator:
 
 
 if __name__ == '__main__':
-    collator = JHUCollator()
-    collator.process()
+    collator = GCCCollator()
+    # collator.process()

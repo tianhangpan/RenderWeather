@@ -176,13 +176,15 @@ class DatasetProcessor:
     def parse_args():
         parser = argparse.ArgumentParser()
 
-        # parser.add_argument('dataset_dir', type=str, help='original data path')
-        # parser.add_argument('task', type=str, help='target data path')
+        parser.add_argument('--dataset_dir', type=str, help='original data path',
+                            default='/Users/pantianhang/python_data/datasets/jhu_collated')
+        parser.add_argument('--task', type=str, help='target data path',
+                            default='density_map')
 
         args = parser.parse_args()
-        args.dataset_dir = r'E:\python_data\datasets\UCF-QNRF_collated'
-        args.task = 'density_map'
-        args.resume = False
+        # args.dataset_dir = r'/Users/pantianhang/python_data/datasets/jhu_collated'
+        # args.task = 'density_map'
+        args.resume = True
         return args
 
 
